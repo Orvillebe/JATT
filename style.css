@@ -147,6 +147,23 @@ body {
   border-color: var(--accent);
 }
 
+/* ---- LOGIN ---- */
+
+.login-form {
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login-error {
+  color: var(--danger);
+  font-size: 12px;
+  text-align: center;
+  min-height: 16px;
+}
+
 /* ---- FORMS ---- */
 
 .quick-entry {
@@ -178,7 +195,7 @@ body {
   letter-spacing: 0.04em;
 }
 
-select, input[type="text"], input[type="number"], input[type="date"] {
+select, input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="password"] {
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
