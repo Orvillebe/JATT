@@ -1,5 +1,5 @@
 /**
- * JATT - Just A Time Tracker
+ * JATL - Just A Time Logger
  *
  * Structure:
  *   Helpers    - shared utilities (DOM, dates, time parsing)
@@ -750,6 +750,7 @@ const App = (() => {
         $$('.view').forEach(v => v.classList.remove('active'));
         $(`#${btn.dataset.tab}`).classList.add('active');
 
+        if (btn.dataset.tab === 'viewRegister') Register.populateDropdowns(weekOffset);
         if (btn.dataset.tab === 'viewReport') Report.render();
         if (btn.dataset.tab === 'viewManage') Manage.render();
       });
