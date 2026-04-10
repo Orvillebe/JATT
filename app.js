@@ -631,21 +631,58 @@ const Manage = (() => {
   function bindRemoveActions() {
     document.querySelectorAll('[data-remove-member]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await DataService.removeMember(btn.dataset.removeMember);
+        const id = btn.dataset.removeMember;
+        const entries = await DataService.getEntries({ memberId: id });
+        const members = await DataService.getMembers();
+        const name = members.find(m => m.id === id)?.name || '?';
+
+        let msg = `${name} verwijderen?`;
+        if (entries.length > 0) {
+          msg += `\n\nDit verwijdert ook ${entries.length} tijdregistratie(s) van ${name}.`;
+        }
+        if (!confirm(msg)) return;
+
+        await DataService.removeMember(id);
         render();
       });
     });
 
     document.querySelectorAll('[data-remove-customer]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await DataService.removeCustomer(btn.dataset.removeCustomer);
+        const id = btn.dataset.removeCustomer;
+        const customers = await DataService.getCustomers();
+        const projects = await DataService.getProjectsByCustomer(id);
+        const entries = await DataService.getEntries({ customerId: id });
+        const name = customers.find(c => c.id === id)?.name || '?';
+
+        let msg = `${name} verwijderen?`;
+        const details = [];
+        if (projects.length > 0) details.push(`${projects.length} project(en)`);
+        if (entries.length > 0) details.push(`${entries.length} tijdregistratie(s)`);
+        if (details.length > 0) {
+          msg += `\n\nDit verwijdert ook ${details.join(' en ')}.`;
+        }
+        if (!confirm(msg)) return;
+
+        await DataService.removeCustomer(id);
         render();
       });
     });
 
     document.querySelectorAll('[data-remove-project]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await DataService.removeProject(btn.dataset.removeProject);
+        const id = btn.dataset.removeProject;
+        const projects = await DataService.getProjects();
+        const entries = await DataService.getEntries({ projectId: id });
+        const name = projects.find(p => p.id === id)?.name || '?';
+
+        let msg = `${name} verwijderen?`;
+        if (entries.length > 0) {
+          msg += `\n\nDit verwijdert ook ${entries.length} tijdregistratie(s).`;
+        }
+        if (!confirm(msg)) return;
+
+        await DataService.removeProject(id);
         render();
       });
     });

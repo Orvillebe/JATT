@@ -51,6 +51,8 @@ const DataService = (() => {
   async function removeMember(id) {
     const members = _get(STORAGE_KEYS.members).filter(m => m.id !== id);
     _set(STORAGE_KEYS.members, members);
+    const entries = _get(STORAGE_KEYS.entries).filter(e => e.memberId !== id);
+    _set(STORAGE_KEYS.entries, entries);
   }
 
   // =====================
@@ -71,6 +73,10 @@ const DataService = (() => {
   async function removeCustomer(id) {
     const customers = _get(STORAGE_KEYS.customers).filter(c => c.id !== id);
     _set(STORAGE_KEYS.customers, customers);
+    const projects = _get(STORAGE_KEYS.projects).filter(p => p.customerId !== id);
+    _set(STORAGE_KEYS.projects, projects);
+    const entries = _get(STORAGE_KEYS.entries).filter(e => e.customerId !== id);
+    _set(STORAGE_KEYS.entries, entries);
   }
 
   // =====================
@@ -95,6 +101,8 @@ const DataService = (() => {
   async function removeProject(id) {
     const projects = _get(STORAGE_KEYS.projects).filter(p => p.id !== id);
     _set(STORAGE_KEYS.projects, projects);
+    const entries = _get(STORAGE_KEYS.entries).filter(e => e.projectId !== id);
+    _set(STORAGE_KEYS.entries, entries);
   }
 
   // =====================
