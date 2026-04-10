@@ -13,17 +13,24 @@
 
 <div class="app" id="app">
 
-  <!-- Member select (shown on first visit) -->
-  <div class="member-select" id="memberSelect">
-    <h1>Wie ben je?</h1>
-    <div class="member-list" id="memberList"></div>
-    <div class="manage-add" id="addMemberFromSelect" style="width:100%;max-width:280px">
-      <input type="text" id="newMemberFromSelect" placeholder="Nieuw teamlid...">
-      <button class="btn btn-small" id="btnAddMemberFromSelect">+</button>
+  <!-- Login screen -->
+  <div class="member-select" id="loginScreen">
+    <h1>JATL</h1>
+    <div class="login-form">
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="loginEmail" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Wachtwoord</label>
+        <input type="password" id="loginPassword" autocomplete="current-password">
+      </div>
+      <button class="btn" id="btnLogin">Inloggen</button>
+      <div class="login-error" id="loginError"></div>
     </div>
   </div>
 
-  <!-- Main app (hidden until member selected) -->
+  <!-- Main app (hidden until logged in) -->
   <div id="mainApp" style="display:none">
     <div class="header">
       <span class="header-title">JATL</span>
@@ -32,7 +39,7 @@
         <span class="week-nav-label" id="weekLabel"></span>
         <button id="weekNext">&rarr;</button>
       </div>
-      <span class="header-member" id="headerMember" title="Klik om te wisselen"></span>
+      <span class="header-member" id="headerMember" title="Klik om uit te loggen"></span>
     </div>
 
     <!-- TAB: Registreren -->
@@ -142,15 +149,6 @@
     <!-- TAB: Beheer -->
     <div class="view" id="viewManage">
       <div class="manage-section">
-        <div class="manage-section-title">Teamleden</div>
-        <div id="manageMembers"></div>
-        <div class="manage-add">
-          <input type="text" id="newMemberName" placeholder="Naam...">
-          <button class="btn btn-small" id="btnAddMember">+</button>
-        </div>
-      </div>
-
-      <div class="manage-section">
         <div class="manage-section-title">Klanten</div>
         <div id="manageCustomers"></div>
         <div class="manage-add">
@@ -200,6 +198,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="data-service.js"></script>
 <script src="app.js"></script>
 </body>

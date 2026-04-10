@@ -5,8 +5,8 @@
  *   Helpers    - shared utilities (DOM, dates, time parsing)
  *   Register   - entry form + week view
  *   Report     - overview with filters + CSV export
- *   Manage     - CRUD for members, customers, projects, phases
- *   App        - init, navigation, member select
+ *   Manage     - CRUD for customers, projects, phases
+ *   App        - init, auth, navigation
  */
 
 /* =============================================
@@ -469,7 +469,7 @@ const Report = (() => {
         <div class="report-total-label">${allEntries.length} registraties</div>
       </div>`;
 
-    // Group: customer > project > phase, but also store entry indices
+    // Group: customer > project > phase, with entry indices for drill-down
     const byCustomer = {};
     for (let i = 0; i < allEntries.length; i++) {
       const e = allEntries[i];
@@ -537,13 +537,10 @@ const Report = (() => {
           drillEl.innerHTML = '';
           return;
         }
-
         // Close other open drills
         container.querySelectorAll('.report-drill').forEach(d => { d.style.display = 'none'; d.innerHTML = ''; });
-
         const indices = drillEl.dataset.indices.split(',').map(Number);
         const drillEntries = indices.map(i => allEntries[i]).sort((a, b) => b.date.localeCompare(a.date));
-
         drillEl.innerHTML = drillEntries.map(e => {
           const proj = projects.find(p => p.id === e.projectId);
           const member = members.find(m => m.id === e.memberId);
@@ -553,7 +550,6 @@ const Report = (() => {
             <span class="report-drill-hours">${formatHours(e.minutes)}</span>
           </div>`;
         }).join('');
-
         drillEl.style.display = 'block';
       });
     });
@@ -569,7 +565,7 @@ const Report = (() => {
       const blob = new Blob([csv], { type: 'text/csv' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `tijdregistratie-${formatDate(new Date())}.csv`;
+      a.download = `jatl-${formatDate(new Date())}.csv`;
       a.click();
     });
   }
@@ -579,24 +575,16 @@ const Report = (() => {
 
 
 /* =============================================
-   Manage - CRUD for members, customers, projects, phases
+   Manage - CRUD for customers, projects, phases
    ============================================= */
 
 const Manage = (() => {
   const { $ } = Helpers;
 
   async function render() {
-    const members = await DataService.getMembers();
     const customers = await DataService.getCustomers();
     const projects = await DataService.getProjects();
     const phases = await DataService.getPhases();
-
-    $('#manageMembers').innerHTML = members.map(m =>
-      `<div class="manage-item">
-        <span>${m.name}</span>
-        <button class="btn btn-small btn-danger" data-remove-member="${m.id}">&times;</button>
-      </div>`
-    ).join('');
 
     $('#manageCustomers').innerHTML = customers.map(c =>
       `<div class="manage-item">
@@ -629,24 +617,6 @@ const Manage = (() => {
   }
 
   function bindRemoveActions() {
-    document.querySelectorAll('[data-remove-member]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.removeMember;
-        const entries = await DataService.getEntries({ memberId: id });
-        const members = await DataService.getMembers();
-        const name = members.find(m => m.id === id)?.name || '?';
-
-        let msg = `${name} verwijderen?`;
-        if (entries.length > 0) {
-          msg += `\n\nDit verwijdert ook ${entries.length} tijdregistratie(s) van ${name}.`;
-        }
-        if (!confirm(msg)) return;
-
-        await DataService.removeMember(id);
-        render();
-      });
-    });
-
     document.querySelectorAll('[data-remove-customer]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.removeCustomer;
@@ -697,14 +667,6 @@ const Manage = (() => {
   }
 
   function bindEvents() {
-    $('#btnAddMember').addEventListener('click', async () => {
-      const name = $('#newMemberName').value.trim();
-      if (!name) return;
-      await DataService.addMember(name);
-      $('#newMemberName').value = '';
-      render();
-    });
-
     $('#btnAddCustomer').addEventListener('click', async () => {
       const name = $('#newCustomerName').value.trim();
       if (!name) return;
@@ -737,50 +699,36 @@ const Manage = (() => {
 
 
 /* =============================================
-   App - init, navigation, member select
+   App - init, auth, navigation
    ============================================= */
 
 const App = (() => {
   const { $, $$ } = Helpers;
 
-  let currentMemberId = null;
+  let currentUserId = null;
   let weekOffset = 0;
 
-  async function renderMemberSelect() {
-    const members = await DataService.getMembers();
-    const saved = DataService.getCurrentMember();
-
-    if (saved && members.find(m => m.id === saved)) {
-      selectMember(saved);
-      return;
-    }
-
-    const list = $('#memberList');
-    list.innerHTML = members.map(m =>
-      `<button data-id="${m.id}">${m.name}</button>`
-    ).join('');
-
-    list.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => selectMember(btn.dataset.id));
-    });
-
-    $('#addMemberFromSelect').style.display = members.length === 0 ? '' : 'none';
+  async function showLogin() {
+    $('#loginScreen').style.display = '';
+    $('#mainApp').style.display = 'none';
+    $('#tabBar').style.display = 'none';
+    $('#loginError').textContent = '';
   }
 
-  async function selectMember(id) {
-    currentMemberId = id;
-    DataService.setCurrentMember(id);
+  async function showApp(session) {
+    currentUserId = session.user.id;
 
     const members = await DataService.getMembers();
-    const member = members.find(m => m.id === id);
+    const member = members.find(m => m.id === currentUserId);
+    const displayName = member?.name || session.user.email;
 
-    $('#memberSelect').style.display = 'none';
+    $('#loginScreen').style.display = 'none';
     $('#mainApp').style.display = 'block';
-    $('#tabBar').style.display = 'flex';
-    $('#headerMember').textContent = member?.name || '';
+    $('#tabBar').style.display = '';
+    $('#headerMember').textContent = displayName;
 
     await Register.populateDropdowns(weekOffset);
-    Register.renderWeek(weekOffset, currentMemberId);
+    Register.renderWeek(weekOffset, currentUserId);
   }
 
   function refreshDropdowns() {
@@ -788,6 +736,55 @@ const App = (() => {
   }
 
   function init() {
+    // Check existing session on load
+    DataService.getSession().then(session => {
+      if (session) {
+        showApp(session);
+      } else {
+        showLogin();
+      }
+    });
+
+    // Listen for auth changes
+    DataService.onAuthStateChange(session => {
+      if (session) {
+        showApp(session);
+      } else {
+        showLogin();
+      }
+    });
+
+    // Login handler
+    $('#btnLogin').addEventListener('click', async () => {
+      const email = $('#loginEmail').value.trim();
+      const password = $('#loginPassword').value;
+      $('#loginError').textContent = '';
+
+      if (!email || !password) {
+        $('#loginError').textContent = 'Vul e-mail en wachtwoord in';
+        return;
+      }
+
+      try {
+        await DataService.signIn(email, password);
+      } catch (err) {
+        $('#loginError').textContent = 'Ongeldige inloggegevens';
+      }
+    });
+
+    // Enter key on password field
+    $('#loginPassword').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') $('#btnLogin').click();
+    });
+
+    // Logout
+    $('#headerMember').addEventListener('click', async () => {
+      if (!confirm('Uitloggen?')) return;
+      await DataService.signOut();
+      currentUserId = null;
+      showLogin();
+    });
+
     // Tab navigation
     $$('.tab-bar button').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -804,36 +801,14 @@ const App = (() => {
       });
     });
 
-    // Member switch
-    $('#headerMember').addEventListener('click', () => {
-      DataService.setCurrentMember(null);
-      currentMemberId = null;
-      $('#memberSelect').style.display = '';
-      $('#mainApp').style.display = 'none';
-      $('#tabBar').style.display = 'none';
-      renderMemberSelect();
-    });
-
     // Bind module events
     Register.bindEvents(
       () => weekOffset,
-      () => currentMemberId,
+      () => currentUserId,
       (delta) => { weekOffset += delta; }
     );
     Report.bindEvents();
     Manage.bindEvents();
-
-    // Add member from select screen
-    $('#btnAddMemberFromSelect').addEventListener('click', async () => {
-      const name = $('#newMemberFromSelect').value.trim();
-      if (!name) return;
-      await DataService.addMember(name);
-      $('#newMemberFromSelect').value = '';
-      renderMemberSelect();
-    });
-
-    // Start
-    renderMemberSelect();
   }
 
   return { init, refreshDropdowns };
