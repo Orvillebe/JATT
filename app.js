@@ -180,7 +180,14 @@ const Register = (() => {
     $('#noteField').classList.remove('visible');
     $('#noteToggle').textContent = '+ notitie';
 
-    toast(`${formatHours(totalSaved)} opgeslagen`);
+    const btn = $('#btnSaveEntry');
+    btn.classList.add('btn-saved');
+    btn.textContent = '✓ Opgeslagen';
+    setTimeout(() => {
+      btn.classList.remove('btn-saved');
+      btn.textContent = 'Opslaan';
+    }, 1500);
+
     renderWeek(weekOffset, memberId);
   }
 
@@ -370,7 +377,9 @@ const Register = (() => {
 
     $('#noteToggle').addEventListener('click', () => {
       $('#noteField').classList.toggle('visible');
-      $('#noteToggle').textContent = $('#noteField').classList.contains('visible') ? '- notitie' : '+ notitie';
+      const open = $('#noteField').classList.contains('visible');
+      $('#noteToggle').textContent = open ? '- notitie' : '+ notitie';
+      if (open) $('#entryNote').focus();
     });
 
     $('#btnSaveEntry').addEventListener('click', () => saveEntry(getWeekOffset(), getMemberId()));
@@ -753,6 +762,8 @@ const App = (() => {
         if (btn.dataset.tab === 'viewRegister') Register.populateDropdowns(weekOffset);
         if (btn.dataset.tab === 'viewReport') Report.render();
         if (btn.dataset.tab === 'viewManage') Manage.render();
+
+        $('#headerWeek').style.display = btn.dataset.tab === 'viewRegister' ? '' : 'none';
       });
     });
 

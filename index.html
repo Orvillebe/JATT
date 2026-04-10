@@ -27,17 +27,16 @@
   <div id="mainApp" style="display:none">
     <div class="header">
       <span class="header-title">JATL</span>
+      <div class="header-week" id="headerWeek">
+        <button id="weekPrev">&larr;</button>
+        <span class="week-nav-label" id="weekLabel"></span>
+        <button id="weekNext">&rarr;</button>
+      </div>
       <span class="header-member" id="headerMember" title="Klik om te wisselen"></span>
     </div>
 
     <!-- TAB: Registreren -->
     <div class="view active" id="viewRegister">
-      <div class="week-nav">
-        <button id="weekPrev">&larr;</button>
-        <span class="week-nav-label" id="weekLabel"></span>
-        <button id="weekNext">&rarr;</button>
-      </div>
-
       <div class="week-total" id="weekTotal"></div>
       <div class="week-summary" id="weekSummary"></div>
 
@@ -172,7 +171,7 @@
 
       <div class="manage-section">
         <div class="manage-section-title">Fases</div>
-        <div class="manage-section-hint">Gelden voor alle projecten. Geen fases = geen fasekeuze bij ingave. Oude entries behouden hun fase.</div>
+        <div class="manage-section-hint">Gelden voor alle projecten. Geen fases = geen fasekeuze bij ingave. Aanpassen heeft geen effect op bestaande entries.</div>
         <div id="managePhases"></div>
         <div class="manage-add">
           <input type="text" id="newPhaseName" placeholder="Fasenaam...">

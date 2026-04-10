@@ -3,14 +3,14 @@
    ============================================= */
 
 :root {
-  --bg: #1e1e22;
+  --bg: #1b1b1f;
   --surface: #26262a;
-  --surface-hover: #2e2e33;
-  --border: #3a3a40;
+  --surface-hover: #30303a;
+  --border: #3e3e46;
   --text: #F5F4F0;
-  --text-muted: #9a9a9e;
-  --accent: #B7BA19;
-  --accent-dim: rgba(183, 186, 25, 0.12);
+  --text-muted: #b5b5b9;
+  --accent: #c4c71e;
+  --accent-dim: rgba(196, 199, 30, 0.12);
   --danger: #c45c5c;
   --danger-dim: rgba(196, 92, 92, 0.12);
   --success: #5ca67a;
@@ -31,10 +31,10 @@ body {
 
 /* ---- LAYOUT ---- */
 
-.app { max-width: 480px; margin: 0 auto; padding-bottom: 80px; }
+.app { max-width: 480px; margin: 0 auto; }
 
 .header {
-  padding: 16px 20px;
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -43,19 +43,26 @@ body {
   top: 0;
   background: var(--bg);
   z-index: 100;
+  gap: 8px;
 }
 
 .header-title {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
+.header-week {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .header-member {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--accent);
   cursor: pointer;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   transition: background 0.15s;
 }
@@ -64,17 +71,12 @@ body {
 /* ---- TAB BAR ---- */
 
 .tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   background: var(--surface);
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: center;
   gap: 0;
   z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .tab-bar button {
@@ -100,7 +102,7 @@ body {
 
 /* ---- VIEWS ---- */
 
-.view { display: none; padding: 16px 20px; }
+.view { display: none; padding: 10px 16px; }
 .view.active { display: block; }
 
 /* ---- MEMBER SELECT ---- */
@@ -151,26 +153,26 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 20px;
+  padding: 10px;
+  margin-bottom: 12px;
 }
 
 .form-row {
   display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
 .form-group {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .form-group label {
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -181,8 +183,8 @@ select, input[type="text"], input[type="number"], input[type="date"] {
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font);
-  font-size: 14px;
-  padding: 10px 12px;
+  font-size: 13px;
+  padding: 7px 10px;
   border-radius: var(--radius-sm);
   width: 100%;
   outline: none;
@@ -241,13 +243,13 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
   color: var(--bg);
   border: none;
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  padding: 12px 20px;
+  padding: 10px 16px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   width: 100%;
-  margin-top: 12px;
+  margin-top: 8px;
   transition: opacity 0.15s;
 }
 .btn:active { opacity: 0.85; }
@@ -276,8 +278,8 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 
 .day-grid {
   display: flex;
-  gap: 4px;
-  margin: 12px 0 8px;
+  gap: 3px;
+  margin: 8px 0 6px;
 }
 
 .day-col {
@@ -285,11 +287,11 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .day-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -303,8 +305,8 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
   width: 100% !important;
   max-width: none !important;
   text-align: center;
-  padding: 10px 4px !important;
-  font-size: 15px !important;
+  padding: 7px 2px !important;
+  font-size: 14px !important;
   font-weight: 500;
   -moz-appearance: textfield;
 }
@@ -314,26 +316,14 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 
 /* ---- WEEK VIEW ---- */
 
-.week-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.week-nav-label {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.week-nav button {
+.header-week button {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font);
-  font-size: 18px;
-  width: 36px;
-  height: 36px;
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
@@ -341,11 +331,16 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
   justify-content: center;
 }
 
-.week-total {
+.week-nav-label {
   font-size: 12px;
+  font-weight: 500;
+}
+
+.week-total {
+  font-size: 11px;
   color: var(--text-muted);
   text-align: right;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .week-total strong {
@@ -356,16 +351,16 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 .week-summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: 4px;
+  margin-bottom: 10px;
 }
 
 .week-chip {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 4px 8px;
+  font-size: 11px;
   line-height: 1.3;
   cursor: pointer;
   transition: border-color 0.15s;
@@ -608,22 +603,27 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 
 .toast {
   position: fixed;
-  bottom: 90px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%) translateY(20px);
+  transform: translate(-50%, -50%) scale(0.9);
   background: var(--success);
   color: #fff;
   font-family: var(--font);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 28px;
   border-radius: var(--radius);
   opacity: 0;
-  transition: all 0.3s;
+  transition: all 0.25s;
   z-index: 200;
   pointer-events: none;
 }
 .toast.show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.btn-saved {
+  background: var(--success) !important;
+  color: #fff !important;
 }
