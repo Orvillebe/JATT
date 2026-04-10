@@ -1,5 +1,5 @@
 /**
- * JATT Data Service - Abstraction layer for the timetracker.
+ * JATL Data Service - Abstraction layer for the timetracker.
  * 
  * This file defines the interface AND provides a localStorage implementation.
  * To switch to Supabase (or anything else), replace this file with one that
@@ -10,13 +10,13 @@
 
 const DataService = (() => {
   const STORAGE_KEYS = {
-    members: 'jatt_members',
-    customers: 'jatt_customers',
-    projects: 'jatt_projects',
-    entries: 'jatt_entries',
-    phases: 'jatt_phases',
-    currentMember: 'jatt_current_member',
-    recentProject: 'jatt_recent_project'
+    members: 'jatl_members',
+    customers: 'jatl_customers',
+    projects: 'jatl_projects',
+    entries: 'jatl_entries',
+    phases: 'jatl_phases',
+    currentMember: 'jatl_current_member',
+    recentProject: 'jatl_recent_project'
   };
 
   function _get(key) {
