@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>JATT | Just A Time Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- Member select (shown on first visit) -->
+  <div class="member-select" id="memberSelect">
+    <h1>Wie ben je?</h1>
+    <div class="member-list" id="memberList"></div>
+    <div class="manage-add" id="addMemberFromSelect" style="width:100%;max-width:280px">
+      <input type="text" id="newMemberFromSelect" placeholder="Nieuw teamlid...">
+      <button class="btn btn-small" id="btnAddMemberFromSelect">+</button>
+    </div>
+  </div>
+
+  <!-- Main app (hidden until member selected) -->
+  <div id="mainApp" style="display:none">
+    <div class="header">
+      <span class="header-title">JATT</span>
+      <span class="header-member" id="headerMember" title="Klik om te wisselen"></span>
+    </div>
+
+    <!-- TAB: Registreren -->
+    <div class="view active" id="viewRegister">
+      <div class="week-nav">
+        <button id="weekPrev">&larr;</button>
+        <span class="week-nav-label" id="weekLabel"></span>
+        <button id="weekNext">&rarr;</button>
+      </div>
+
+      <div class="week-total" id="weekTotal"></div>
+      <div class="week-summary" id="weekSummary"></div>
+
+      <div class="quick-entry">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Klant</label>
+            <select id="entryCustomer"><option value="">Kies...</option></select>
+          </div>
+          <div class="form-group">
+            <label>Project</label>
+            <select id="entryProject"><option value="">Kies...</option></select>
+          </div>
+        </div>
+
+        <div class="form-row" id="phaseRow">
+          <div class="form-group">
+            <label>Fase</label>
+            <select id="entryPhase"></select>
+          </div>
+        </div>
+
+        <div class="day-grid">
+          <div class="day-col">
+            <label class="day-label">ma</label>
+            <input type="text" class="day-input" inputmode="numeric" placeholder="-" data-day="0">
+          </div>
+          <div class="day-col">
+            <label class="day-label">di</label>
+            <input type="text" class="day-input" inputmode="numeric" placeholder="-" data-day="1">
+          </div>
+          <div class="day-col">
+            <label class="day-label">wo</label>
+            <input type="text" class="day-input" inputmode="numeric" placeholder="-" data-day="2">
+          </div>
+          <div class="day-col">
+            <label class="day-label">do</label>
+            <input type="text" class="day-input" inputmode="numeric" placeholder="-" data-day="3">
+          </div>
+          <div class="day-col">
+            <label class="day-label">vr</label>
+            <input type="text" class="day-input" inputmode="numeric" placeholder="-" data-day="4">
+          </div>
+          <div class="day-col day-col-weekend">
+            <label class="day-label">za</label>
+            <input type="text" class="day-input" inputmode="numeric" placeholder="-" data-day="5">
+          </div>
+          <div class="day-col day-col-weekend">
+            <label class="day-label">zo</label>
+            <input type="text" class="day-input" inputmode="numeric" placeholder="-" data-day="6">
+          </div>
+        </div>
+
+        <button class="note-toggle" id="noteToggle">+ notitie</button>
+        <div class="note-field" id="noteField">
+          <textarea id="entryNote" placeholder="Optionele toelichting..."></textarea>
+        </div>
+
+        <button class="btn" id="btnSaveEntry">Opslaan</button>
+      </div>
+
+      <div id="weekEntries"></div>
+    </div>
+
+    <!-- TAB: Overzicht -->
+    <div class="view" id="viewReport">
+      <div class="report-filters">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Van</label>
+            <input type="date" id="reportFrom">
+          </div>
+          <div class="form-group">
+            <label>Tot</label>
+            <input type="date" id="reportTo">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Klant</label>
+            <select id="reportCustomer"><option value="">Alle</option></select>
+          </div>
+          <div class="form-group">
+            <label>Project</label>
+            <select id="reportProject"><option value="">Alle</option></select>
+          </div>
+          <div class="form-group">
+            <label>Persoon</label>
+            <select id="reportMember"><option value="">Iedereen</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fase</label>
+            <select id="reportPhase"><option value="">Alle</option></select>
+          </div>
+        </div>
+      </div>
+      <div id="reportResults"></div>
+      <button class="btn btn-subtle" id="btnExport" style="margin-top:16px">CSV exporteren</button>
+    </div>
+
+    <!-- TAB: Beheer -->
+    <div class="view" id="viewManage">
+      <div class="manage-section">
+        <div class="manage-section-title">Teamleden</div>
+        <div id="manageMembers"></div>
+        <div class="manage-add">
+          <input type="text" id="newMemberName" placeholder="Naam...">
+          <button class="btn btn-small" id="btnAddMember">+</button>
+        </div>
+      </div>
+
+      <div class="manage-section">
+        <div class="manage-section-title">Klanten</div>
+        <div id="manageCustomers"></div>
+        <div class="manage-add">
+          <input type="text" id="newCustomerName" placeholder="Klantnaam...">
+          <button class="btn btn-small" id="btnAddCustomer">+</button>
+        </div>
+      </div>
+
+      <div class="manage-section">
+        <div class="manage-section-title">Projecten</div>
+        <div id="manageProjects"></div>
+        <div class="manage-add">
+          <select id="newProjectCustomer" style="flex:1"><option value="">Klant...</option></select>
+          <input type="text" id="newProjectName" placeholder="Projectnaam..." style="flex:1">
+          <button class="btn btn-small" id="btnAddProject">+</button>
+        </div>
+      </div>
+
+      <div class="manage-section">
+        <div class="manage-section-title">Fases</div>
+        <div class="manage-section-hint">Gelden voor alle projecten. Geen fases = geen fasekeuze bij ingave. Oude entries behouden hun fase.</div>
+        <div id="managePhases"></div>
+        <div class="manage-add">
+          <input type="text" id="newPhaseName" placeholder="Fasenaam...">
+          <button class="btn btn-small" id="btnAddPhase">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <nav class="tab-bar" id="tabBar" style="display:none">
+    <button data-tab="viewRegister" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Registreren
+    </button>
+    <button data-tab="viewReport">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      Overzicht
+    </button>
+    <button data-tab="viewManage">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      Beheer
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="data-service.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
