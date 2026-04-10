@@ -1,4 +1,4 @@
-# JATT - Just A Time Tracker
+# JATL - Just A Time Logger
 
 Minimale tijdregistratie voor kleine teams. Draait als statische site op GitHub Pages.
 
