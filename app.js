@@ -511,7 +511,7 @@ const Register = (() => {
    ============================================= */
 
 const Report = (() => {
-  const { $, formatDate, formatHours } = Helpers;
+  const { $, getWeekDates, formatDate, formatHours } = Helpers;
 
   async function render() {
     const customers = await DataService.getCustomers();
@@ -539,9 +539,9 @@ const Report = (() => {
     $('#reportPhase').value = prevPhase;
 
     if (!$('#reportFrom').value) {
-      const now = new Date();
-      $('#reportFrom').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-      $('#reportTo').value = formatDate(now);
+      const weekDates = getWeekDates(0);
+      $('#reportFrom').value = formatDate(weekDates[0]);
+      $('#reportTo').value = formatDate(weekDates[6]);
     }
 
     await update();
