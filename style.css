@@ -422,6 +422,9 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
   padding: 10px 0;
   font-size: 15px;
   border-bottom: 1px solid rgba(42, 44, 51, 0.4);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .entry-project {
