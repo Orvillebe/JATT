@@ -417,6 +417,7 @@ const Register = (() => {
       row.addEventListener('touchstart', startPress, { passive: true });
       row.addEventListener('touchmove', cancelPress);
       row.addEventListener('touchend', endPress);
+      row.addEventListener('contextmenu', (e) => e.preventDefault());
 
       // Mouse events
       row.addEventListener('mousedown', startPress);
