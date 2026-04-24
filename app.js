@@ -101,7 +101,7 @@ const Register = (() => {
     const btn = $('#btnSaveEntry');
     btn.textContent = 'Opslaan';
     btn.classList.remove('btn-editing');
-    $$('.entry-row').forEach(r => r.classList.remove('entry-editing'));
+    $$('.entry-swipe').forEach(r => r.classList.remove('entry-editing'));
   }
 
   async function populateDropdowns(weekOffset) {
@@ -271,7 +271,7 @@ const Register = (() => {
         $('#entryProject').value = chip.dataset.project;
         $('#entryPhase').value = chip.dataset.phase;
         $$('.day-input').forEach(inp => inp.value = '');
-        $('.quick-entry').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         $$('.week-chip').forEach(c => c.classList.remove('week-chip-active'));
         chip.classList.add('week-chip-active');
       });
@@ -303,13 +303,18 @@ const Register = (() => {
       for (const e of grouped) {
         const proj = projects.find(p => p.id === e.projectId);
         const cust = customers.find(c => c.id === e.customerId);
-        html += `<div class="entry-row" data-entry-ids="${e.ids.join(',')}" data-minutes="${e.minutes}" data-customer="${e.customerId}" data-project="${e.projectId}" data-phase="${e.phase || ''}" data-note="${(e.note || '').replace(/"/g, '&quot;')}" data-date="${e.date}">
-          <div class="entry-project">
-            <div class="entry-project-name">${proj?.name || '?'}</div>
-            <div class="entry-project-detail">${cust?.name || '?'}${e.phase ? ' / ' + e.phase : ''}${e.note ? ' / ' + e.note : ''}</div>
+        html += `<div class="entry-swipe" data-entry-ids="${e.ids.join(',')}" data-minutes="${e.minutes}" data-customer="${e.customerId}" data-project="${e.projectId}" data-phase="${e.phase || ''}" data-note="${(e.note || '').replace(/"/g, '&quot;')}" data-date="${e.date}">
+          <div class="entry-row">
+            <div class="entry-project">
+              <div class="entry-project-name">${proj?.name || '?'}</div>
+              <div class="entry-project-detail">${cust?.name || '?'}${e.phase ? ' / ' + e.phase : ''}${e.note ? ' / ' + e.note : ''}</div>
+            </div>
+            <div class="entry-hours">${formatHours(e.minutes)}</div>
+            <button class="entry-delete" data-ids="${e.ids.join(',')}" title="Verwijder">&times;</button>
           </div>
-          <div class="entry-hours">${formatHours(e.minutes)}</div>
-          <button class="entry-delete" data-ids="${e.ids.join(',')}" title="Verwijder">&times;</button>
+          <div class="entry-actions">
+            <button class="entry-action entry-action-edit">Bewerken</button>
+          </div>
         </div>`;
       }
       html += '</div>';
@@ -336,7 +341,170 @@ const Register = (() => {
     return grouped;
   }
 
+  function fillFormForEdit(wrapper, weekOffset) {
+    const ids = wrapper.dataset.entryIds.split(',');
+    const dates = getWeekDates(weekOffset);
+
+    $('#entryCustomer').value = wrapper.dataset.customer;
+    updateProjectDropdown().then(() => {
+      $('#entryProject').value = wrapper.dataset.project;
+    });
+    $('#entryPhase').value = wrapper.dataset.phase;
+
+    const note = wrapper.dataset.note || '';
+    if (note) {
+      $('#noteField').classList.add('visible');
+      $('#noteToggle').textContent = '- notitie';
+      $('#entryNote').value = note;
+    } else {
+      $('#noteField').classList.remove('visible');
+      $('#noteToggle').textContent = '+ notitie';
+      $('#entryNote').value = '';
+    }
+
+    $$('.day-input').forEach(inp => inp.value = '');
+    const entryDate = wrapper.dataset.date;
+    const dayIndex = dates.findIndex(d => formatDate(d) === entryDate);
+    if (dayIndex >= 0) {
+      const mins = parseInt(wrapper.dataset.minutes);
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      $$('.day-input')[dayIndex].value = m === 0 ? `${h}` : `${h}:${String(m).padStart(2, '0')}`;
+    }
+
+    editingIds = ids;
+    $$('.entry-swipe').forEach(r => r.classList.remove('entry-editing'));
+    wrapper.classList.add('entry-editing');
+    const btn = $('#btnSaveEntry');
+    btn.textContent = 'Bewerken opslaan';
+    btn.classList.add('btn-editing');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeAllSwipes(container) {
+    container.querySelectorAll('.entry-swipe.swiped').forEach(el => {
+      el.classList.remove('swiped');
+      el.querySelector('.entry-row').style.transform = '';
+    });
+  }
+
   function bindEntryActions(container, weekOffset, memberId) {
+    container.querySelectorAll('.entry-swipe').forEach(wrapper => {
+      const row = wrapper.querySelector('.entry-row');
+      const ids = wrapper.dataset.entryIds.split(',');
+      let startX = 0;
+      let currentX = 0;
+      let swiping = false;
+
+      // --- Swipe (touch) ---
+      row.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        currentX = startX;
+        swiping = false;
+        row.style.transition = 'none';
+      }, { passive: true });
+
+      row.addEventListener('touchmove', (e) => {
+        currentX = e.touches[0].clientX;
+        const dx = currentX - startX;
+        if (Math.abs(dx) > 10) swiping = true;
+        if (dx < 0) {
+          row.style.transform = `translateX(${Math.max(dx, -90)}px)`;
+        }
+      }, { passive: true });
+
+      row.addEventListener('touchend', () => {
+        row.style.transition = 'transform 0.2s';
+        const dx = currentX - startX;
+        if (dx < -40) {
+          closeAllSwipes(container);
+          wrapper.classList.add('swiped');
+          row.style.transform = 'translateX(-90px)';
+        } else {
+          wrapper.classList.remove('swiped');
+          row.style.transform = '';
+        }
+      });
+
+      // --- Double click (desktop) ---
+      row.addEventListener('dblclick', (evt) => {
+        if (evt.target.closest('.entry-delete')) return;
+        evt.preventDefault();
+        closeAllSwipes(container);
+        fillFormForEdit(wrapper, weekOffset);
+      });
+
+      // --- Single click: inline hour edit ---
+      let clickTimer = null;
+      row.addEventListener('click', (evt) => {
+        if (swiping) { swiping = false; return; }
+        if (wrapper.classList.contains('swiped')) return;
+        if (evt.target.closest('.entry-delete')) return;
+
+        if (clickTimer) {
+          clearTimeout(clickTimer);
+          clickTimer = null;
+          return; // double click handled by dblclick
+        }
+
+        clickTimer = setTimeout(() => {
+          clickTimer = null;
+          const hoursEl = row.querySelector('.entry-hours');
+          if (hoursEl.querySelector('input')) return;
+
+          const currentMinutes = wrapper.dataset.minutes;
+          const entryIds = wrapper.dataset.entryIds.split(',');
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.inputMode = 'numeric';
+          const mins = parseInt(currentMinutes);
+          const editH = Math.floor(mins / 60);
+          const editM = mins % 60;
+          input.value = editM === 0 ? `${editH}` : `${editH}:${String(editM).padStart(2, '0')}`;
+          input.className = 'entry-hours-edit';
+          hoursEl.textContent = '';
+          hoursEl.appendChild(input);
+          input.focus();
+          input.select();
+
+          const save = async () => {
+            const newMinutes = parseTime(input.value);
+            if (newMinutes && newMinutes > 0 && newMinutes !== parseInt(currentMinutes)) {
+              const original = await DataService.getEntries({ memberId });
+              const source = original.find(e => e.id === entryIds[0]);
+              for (const id of entryIds) await DataService.removeEntry(id);
+              await DataService.addEntry({
+                memberId: source.memberId,
+                customerId: source.customerId,
+                projectId: source.projectId,
+                phase: source.phase,
+                date: source.date,
+                minutes: newMinutes,
+                note: source.note
+              });
+              renderWeek(weekOffset, memberId);
+            } else {
+              hoursEl.textContent = formatHours(parseInt(currentMinutes));
+            }
+          };
+
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') input.blur();
+            if (e.key === 'Escape') { hoursEl.textContent = formatHours(parseInt(currentMinutes)); }
+          });
+        }, 250);
+      });
+
+      // --- Swipe action buttons ---
+      wrapper.querySelector('.entry-action-edit').addEventListener('click', () => {
+        closeAllSwipes(container);
+        fillFormForEdit(wrapper, weekOffset);
+      });
+    });
+
+    // --- Delete buttons ---
     container.querySelectorAll('.entry-delete').forEach(btn => {
       btn.addEventListener('click', async (evt) => {
         evt.stopPropagation();
@@ -344,134 +512,6 @@ const Register = (() => {
         for (const id of ids) await DataService.removeEntry(id);
         clearEditMode();
         renderWeek(weekOffset, memberId);
-      });
-    });
-
-    container.querySelectorAll('.entry-row[data-entry-ids]').forEach(row => {
-      row.style.cursor = 'pointer';
-      let pressTimer = null;
-      let longPressed = false;
-
-      const startPress = (evt) => {
-        longPressed = false;
-        pressTimer = setTimeout(async () => {
-          longPressed = true;
-          // Long press: fill form for full edit
-          const ids = row.dataset.entryIds.split(',');
-          const dates = getWeekDates(weekOffset);
-
-          $('#entryCustomer').value = row.dataset.customer;
-          await updateProjectDropdown();
-          $('#entryProject').value = row.dataset.project;
-          $('#entryPhase').value = row.dataset.phase;
-
-          // Fill note
-          const note = row.dataset.note || '';
-          if (note) {
-            $('#noteField').classList.add('visible');
-            $('#noteToggle').textContent = '- notitie';
-            $('#entryNote').value = note;
-          } else {
-            $('#noteField').classList.remove('visible');
-            $('#noteToggle').textContent = '+ notitie';
-            $('#entryNote').value = '';
-          }
-
-          // Fill hours in correct day column
-          $$('.day-input').forEach(inp => inp.value = '');
-          const entryDate = row.dataset.date;
-          const dayIndex = dates.findIndex(d => formatDate(d) === entryDate);
-          if (dayIndex >= 0) {
-            const mins = parseInt(row.dataset.minutes);
-            const h = Math.floor(mins / 60);
-            const m = mins % 60;
-            $$('.day-input')[dayIndex].value = m === 0 ? `${h}` : `${h}:${String(m).padStart(2, '0')}`;
-          }
-
-          // Set edit mode
-          editingIds = ids;
-          $$('.entry-row').forEach(r => r.classList.remove('entry-editing'));
-          row.classList.add('entry-editing');
-          const btn = $('#btnSaveEntry');
-          btn.textContent = 'Bewerken opslaan';
-          btn.classList.add('btn-editing');
-
-          $('.quick-entry').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 500);
-      };
-
-      const cancelPress = () => {
-        clearTimeout(pressTimer);
-      };
-
-      const endPress = (evt) => {
-        clearTimeout(pressTimer);
-        if (longPressed) {
-          evt.preventDefault();
-          evt.stopPropagation();
-          return;
-        }
-      };
-
-      // Touch events
-      row.addEventListener('touchstart', startPress, { passive: true });
-      row.addEventListener('touchmove', cancelPress);
-      row.addEventListener('touchend', endPress);
-      row.addEventListener('contextmenu', (e) => e.preventDefault());
-
-      // Mouse events
-      row.addEventListener('mousedown', startPress);
-      row.addEventListener('mousemove', cancelPress);
-      row.addEventListener('mouseup', endPress);
-
-      // Short click: inline hour edit
-      row.addEventListener('click', (evt) => {
-        if (longPressed) return;
-        if (evt.target.closest('.entry-delete')) return;
-        const hoursEl = row.querySelector('.entry-hours');
-        if (hoursEl.querySelector('input')) return;
-
-        const currentMinutes = row.dataset.minutes;
-        const ids = row.dataset.entryIds.split(',');
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.inputMode = 'numeric';
-        const mins = parseInt(currentMinutes);
-        const editH = Math.floor(mins / 60);
-        const editM = mins % 60;
-        input.value = editM === 0 ? `${editH}` : `${editH}:${String(editM).padStart(2, '0')}`;
-        input.className = 'entry-hours-edit';
-        hoursEl.textContent = '';
-        hoursEl.appendChild(input);
-        input.focus();
-        input.select();
-
-        const save = async () => {
-          const newMinutes = parseTime(input.value);
-          if (newMinutes && newMinutes > 0 && newMinutes !== parseInt(currentMinutes)) {
-            const original = await DataService.getEntries({ memberId });
-            const source = original.find(e => e.id === ids[0]);
-            for (const id of ids) await DataService.removeEntry(id);
-            await DataService.addEntry({
-              memberId: source.memberId,
-              customerId: source.customerId,
-              projectId: source.projectId,
-              phase: source.phase,
-              date: source.date,
-              minutes: newMinutes,
-              note: source.note
-            });
-            renderWeek(weekOffset, memberId);
-          } else {
-            hoursEl.textContent = formatHours(parseInt(currentMinutes));
-          }
-        };
-
-        input.addEventListener('blur', save);
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') input.blur();
-          if (e.key === 'Escape') { hoursEl.textContent = formatHours(parseInt(currentMinutes)); }
-        });
       });
     });
   }
