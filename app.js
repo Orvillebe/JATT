@@ -304,15 +304,17 @@ const Register = (() => {
         const proj = projects.find(p => p.id === e.projectId);
         const cust = customers.find(c => c.id === e.customerId);
         html += `<div class="entry-swipe" data-entry-ids="${e.ids.join(',')}" data-minutes="${e.minutes}" data-customer="${e.customerId}" data-project="${e.projectId}" data-phase="${e.phase || ''}" data-note="${(e.note || '').replace(/"/g, '&quot;')}" data-date="${e.date}">
+          <div class="entry-action-left">
+            <button class="entry-action entry-action-delete">Verwijder</button>
+          </div>
           <div class="entry-row">
             <div class="entry-project">
               <div class="entry-project-name">${proj?.name || '?'}</div>
               <div class="entry-project-detail">${cust?.name || '?'}${e.phase ? ' / ' + e.phase : ''}${e.note ? ' / ' + e.note : ''}</div>
             </div>
             <div class="entry-hours">${formatHours(e.minutes)}</div>
-            <button class="entry-delete" data-ids="${e.ids.join(',')}" title="Verwijder">&times;</button>
           </div>
-          <div class="entry-actions">
+          <div class="entry-action-right">
             <button class="entry-action entry-action-edit">Bewerken</button>
           </div>
         </div>`;
@@ -383,8 +385,8 @@ const Register = (() => {
   }
 
   function closeAllSwipes(container) {
-    container.querySelectorAll('.entry-swipe.swiped').forEach(el => {
-      el.classList.remove('swiped');
+    container.querySelectorAll('.entry-swipe.swiped-left, .entry-swipe.swiped-right').forEach(el => {
+      el.classList.remove('swiped-left', 'swiped-right');
       el.querySelector('.entry-row').style.transform = '';
     });
   }
@@ -409,9 +411,7 @@ const Register = (() => {
         currentX = e.touches[0].clientX;
         const dx = currentX - startX;
         if (Math.abs(dx) > 10) swiping = true;
-        if (dx < 0) {
-          row.style.transform = `translateX(${Math.max(dx, -90)}px)`;
-        }
+        row.style.transform = `translateX(${Math.max(-90, Math.min(90, dx))}px)`;
       }, { passive: true });
 
       row.addEventListener('touchend', () => {
@@ -419,17 +419,22 @@ const Register = (() => {
         const dx = currentX - startX;
         if (dx < -40) {
           closeAllSwipes(container);
-          wrapper.classList.add('swiped');
+          wrapper.classList.add('swiped-left');
+          wrapper.classList.remove('swiped-right');
           row.style.transform = 'translateX(-90px)';
+        } else if (dx > 40) {
+          closeAllSwipes(container);
+          wrapper.classList.add('swiped-right');
+          wrapper.classList.remove('swiped-left');
+          row.style.transform = 'translateX(90px)';
         } else {
-          wrapper.classList.remove('swiped');
+          wrapper.classList.remove('swiped-left', 'swiped-right');
           row.style.transform = '';
         }
       });
 
       // --- Double click (desktop) ---
       row.addEventListener('dblclick', (evt) => {
-        if (evt.target.closest('.entry-delete')) return;
         evt.preventDefault();
         closeAllSwipes(container);
         fillFormForEdit(wrapper, weekOffset);
@@ -439,8 +444,7 @@ const Register = (() => {
       let clickTimer = null;
       row.addEventListener('click', (evt) => {
         if (swiping) { swiping = false; return; }
-        if (wrapper.classList.contains('swiped')) return;
-        if (evt.target.closest('.entry-delete')) return;
+        if (wrapper.classList.contains('swiped-left') || wrapper.classList.contains('swiped-right')) return;
 
         if (clickTimer) {
           clearTimeout(clickTimer);
@@ -502,13 +506,9 @@ const Register = (() => {
         closeAllSwipes(container);
         fillFormForEdit(wrapper, weekOffset);
       });
-    });
 
-    // --- Delete buttons ---
-    container.querySelectorAll('.entry-delete').forEach(btn => {
-      btn.addEventListener('click', async (evt) => {
-        evt.stopPropagation();
-        const ids = btn.dataset.ids.split(',');
+      wrapper.querySelector('.entry-action-delete').addEventListener('click', async () => {
+        const ids = wrapper.dataset.entryIds.split(',');
         for (const id of ids) await DataService.removeEntry(id);
         clearEditMode();
         renderWeek(weekOffset, memberId);
